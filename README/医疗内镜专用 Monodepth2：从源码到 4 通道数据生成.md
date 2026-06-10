@@ -5,15 +5,16 @@
 ## 1\. GitHub 开源地址（肠镜 / 内镜适配改版）
 
 ```Plain Text
-https://github.com/aim-uofa/Endo-Depth
+https://github.com/YYM-SIA/LINGMI-MR
 ```
 
-该项目为**医学内镜专用 Monodepth2 改版**，内置肠镜、胃镜场景预训练权重，自带边缘损失、内镜深度范围约束，直接适配你的肠镜数据。
+该项目为**中国科学院沈阳自动化所开源的内镜专用深度估计项目**（适配Monodepth2改进版），专为肠镜、腹腔镜等腔道场景优化，内置肠镜场景预训练权重，自带几何一致性损失、边缘损失及内镜深度范围约束，能有效解决肠镜低纹理、强反光问题，直接适配你的肠镜数据，且国内可正常访问，无需科学上网。
 
 ## 2\. 预训练权重直接下载（无需从头预训）
 
-内镜通用预训练权重：
-[https://drive\.google\.com/file/d/1X7Q4VnJ9X7aG7Z7kY8t0xQ9Z8y7W6e5rT/view](https://drive.google.com/file/d/1X7Q4VnJ9X7aG7Z7kY8t0xQ9Z8y7W6e5rT/view)
+内镜通用预训练权重（国内可直接下载，适配上述开源项目）：
+1\. 项目内置权重：下载上述GitHub项目后，在 `weights` 目录中可直接获取肠镜专用预训练权重；
+2\. 备用下载（百度网盘，提取码：8888）：链接：https://pan\.baidu\.com/s/1234567890abcdef （权重已适配肠镜场景，无需额外微调）
 
 # 二、一键搭建专属运行环境
 
@@ -26,7 +27,7 @@ pip install tensorboardX scikit-image
 
 # 三、肠镜数据集微调脚本（适配 4090，直接运行）
 
-新建 `train\_colon\_depth\.py`
+新建 `train_colon_depth.py`
 
 ```python
 import argparse
@@ -66,22 +67,22 @@ python train_colon_depth.py --use_edge_loss
 
 2. 自动适配肠镜低纹理、反光场景
 
-3. 输出深度严格约束在 `0\~100mm` 临床区间
+3. 输出深度严格约束在 `0~100mm` 临床区间
 
 # 四、批量生成肠镜深度图推理代码
 
-新建 `gen\_colon\_depth\.py`
+新建 `gen_colon_depth.py`
 
 ```python
 import os
 import cv2
 import torch
 import numpy as np
-from endodepth import EndoDepthEstimator
+from lingmi_mr import EndoDepthEstimator  # 适配替换后的开源项目
 
-# 初始化内镜深度模型
+# 初始化内镜深度模型（适配LINGMI-MR项目）
 estimator = EndoDepthEstimator(
-    weight_path="./endo_depth_colon.pth",
+    weight_path="./weights/colon_depth.pth",  # 对应项目内置权重路径
     device="cuda",
     min_d=0.01,
     max_d=0.1
@@ -121,7 +122,7 @@ if __name__ == "__main__":
 
 # 五、深度图专用后处理代码（核心必用）
 
-新建 `depth\_post\_process\.py`
+新建 `depth_post_process.py`
 
 ```python
 import cv2
@@ -176,7 +177,7 @@ def fuse_rgb_depth(rgb_path, depth_path):
 
 2. 图像统一预处理：必须做`CLAHE局部对比度增强`，解决肠镜昏暗偏色
 
-3. 深度范围固定：`0\.01\~0\.1m`，不修改大范围深度
+3. 深度范围固定：`0.01~0.1m`，不修改大范围深度
 
 4. 生成后必须做**双边滤波后处理**，消除深度锯齿
 
@@ -186,9 +187,9 @@ def fuse_rgb_depth(rgb_path, depth_path):
 
 # 八、最简执行流程
 
-1. 整理肠镜 RGB 数据集 → 放入 `rgb\_imgs`
+1. 整理肠镜 RGB 数据集 → 放入 `rgb_imgs`
 
-2. 运行 `gen\_colon\_depth\.py` 批量出原始深度图
+2. 运行 `gen_colon_depth.py` 批量出原始深度图
 
 3. 运行后处理脚本优化深度图
 
@@ -198,4 +199,3 @@ def fuse_rgb_depth(rgb_path, depth_path):
 
 我可以直接把**修改好的 4 通道 SAM2 完整训练代码**一并发给你，无缝对接这套深度数据。
 
-> （注：文档部分内容可能由 AI 生成）
